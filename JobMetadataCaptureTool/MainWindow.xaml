@@ -1,0 +1,22 @@
+﻿<Window x:Class="JobMetadataCaptureTool.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:JobMetadataCaptureTool"
+        mc:Ignorable="d"
+        Title="Job Metadata Capture" Height="450" Width="800">
+    <Grid Margin="10">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Button x:Name="CaptureButton" Content="Launch and Capture" Width="150" Height="30" Click="CaptureButton_Click"/>
+
+        <TextBox x:Name="OutputBox" Grid.Row="1" Margin="0,10,0,10" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+
+        <Button x:Name="SendButton" Grid.Row="2" Content="Send to Backend" Width="150" Height="30" HorizontalAlignment="Right" Click="SendButton_Click"/>
+    </Grid>
+</Window>

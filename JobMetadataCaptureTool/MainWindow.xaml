@@ -13,8 +13,8 @@
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Button x:Name="CaptureButton" Content="Launch and Capture" Width="150" Height="30" Click="CaptureButton_Click"/>
-
+        <Button x:Name="CaptureButton" Content="Launch Browser" Click="LaunchButton_Click" Margin="5"/>
+        <Button Content="Capture Metadata" Click="CaptureButton_Click" Margin="5"/>
         <TextBox x:Name="OutputBox" Grid.Row="1" Margin="0,10,0,10" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
 
         <Button x:Name="SendButton" Grid.Row="2" Content="Send to Backend" Width="150" Height="30" HorizontalAlignment="Right" Click="SendButton_Click"/>

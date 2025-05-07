@@ -70,7 +70,8 @@ namespace JobMetadataCaptureTool
                 searchStrategies = new[]
                 {
             new
-            {
+            {   
+                companyName,
                 searchType = "queryParam",
                 exampleQuery = uri.Query,
                 method = "GET",
@@ -95,9 +96,9 @@ namespace JobMetadataCaptureTool
             handler.ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true;
             var httpClient = new HttpClient(handler);
 
-            var json = JsonSerializer.Serialize(new[] { _capturedMetadata });
+            var json = JsonSerializer.Serialize(_capturedMetadata );
             var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await httpClient.PostAsync("http//localhost:5216/api/job-metadata", content);
+            var response = await httpClient.PostAsync("https://localhost:7255/api/company", content);
 
             MessageBox.Show(response.IsSuccessStatusCode ? "Sent!" : "Failed to send.", "Status", MessageBoxButton.OK);
         }

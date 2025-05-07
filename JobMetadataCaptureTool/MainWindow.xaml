@@ -10,13 +10,22 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="*"/>
-            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
 
-        <Button x:Name="CaptureButton" Content="Launch Browser" Click="LaunchButton_Click" Margin="5"/>
-        <Button Content="Capture Metadata" Click="CaptureButton_Click" Margin="5"/>
-        <TextBox x:Name="OutputBox" Grid.Row="1" Margin="0,10,0,10" AcceptsReturn="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto"/>
+        <UniformGrid Grid.Row="0" Columns="3" Margin="0,0,0,10" HorizontalAlignment="Stretch">
+            <Button Name="LaunchButton" IsEnabled="True" Content="Launch Browser" Click="LaunchButton_Click" Margin="0,0,10,0" Width="130"/>
+            <Button Name="CaptureButton" Content="Capture Metadata" Click="CaptureButton_Click" Margin="0,0,10,0" Width="130" />
+            <Button Name="SendButton" Content="Send to Backend" Click="SendButton_Click" Width="130" />
+        </UniformGrid>
 
-        <Button x:Name="SendButton" Grid.Row="2" Content="Send to Backend" Width="150" Height="30" HorizontalAlignment="Right" Click="SendButton_Click"/>
+        <TextBox Name="OutputBox"
+                Grid.Row="1"
+                VerticalScrollBarVisibility="Auto"
+                HorizontalScrollBarVisibility="Auto"
+                AcceptsReturn="True"
+                TextWrapping="Wrap"
+                FontFamily="Consolas"
+                FontSize="12"
+                IsReadOnly="True" />
     </Grid>
 </Window>

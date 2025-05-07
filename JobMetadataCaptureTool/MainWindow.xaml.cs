@@ -37,9 +37,10 @@ namespace JobMetadataCaptureTool
                 DefaultViewport = null
             });
 
-            _page = await _browser.NewPageAsync();
-            await _page.GoToAsync("about:blank");
+            var pages = await _browser.PagesAsync();
+            _page = pages.First();
 
+            LaunchButton.IsEnabled = false;
             MessageBox.Show("Browser launched. Navigate to a job search page, then click 'Capture Metadata'.");
         }
 
@@ -54,15 +55,8 @@ namespace JobMetadataCaptureTool
             var url = _page.Url;
             var uri = new Uri(url);
 
-            var pageTitle = await _page.GetTitleAsync();
-            string companyName = ExtractCompanyNameFromTitle.ExtractNameFromTitle(pageTitle);
-            if (string.IsNullOrWhiteSpace(companyName))
-            {
-                var domainParts = uri.Host.Replace("www.", "").Split('.');
-                companyName = CultureInfo.CurrentCulture.TextInfo.ToTitleCase(domainParts.Length > 1
-                    ? domainParts[domainParts.Length - 2]
-                    : domainParts[0]);
-            }
+            string companyName = GetCompanyNameFromUri.ExtractNameFromTitle(uri);
+
 
             _capturedMetadata = new
             {
@@ -88,53 +82,6 @@ namespace JobMetadataCaptureTool
 
             OutputBox.Text = JsonSerializer.Serialize(_capturedMetadata, new JsonSerializerOptions { WriteIndented = true });
         }
-
-        //private async void CaptureButton_Click(object sender, RoutedEventArgs e)
-        //{
-        //    var browserFetcher = new BrowserFetcher();
-        //    await browserFetcher.DownloadAsync();
-
-        //    var browser = await Puppeteer.LaunchAsync(new LaunchOptions { Headless = false });
-        //    var page = await browser.NewPageAsync();
-        //    var pageTitle = await page.GetTitleAsync();
-        //    string cName = ExtractCompanyNameFromTitle.ExtractNameFromTitle(pageTitle);
-        //    page.Request += (s, e) =>
-        //    {
-        //        var url = e.Request.Url;
-        //        if (url.Contains("jobs") || url.Contains("career"))
-        //        {
-        //            var uri = new Uri(url);
-        //            _capturedMetadata = new
-        //            {
-        //                companyName = cName,
-        //                domain = uri.Host.Replace("www.", ""),
-        //                subdomain = uri.Host.Split('.')[0],
-        //                jobSearchPath = uri.AbsolutePath,
-        //                jobSearchUrl = url,
-        //                lastVerified = DateTime.Now,
-        //                notes = "Auto-captured",
-        //                searchStrategies = new[]
-        //                {
-        //                    new
-        //                    {
-        //                        searchType = "queryParam",
-        //                        exampleQuery = uri.Query,
-        //                        method = e.Request.Method,
-        //                        matchPattern = uri.Query.Replace("?", "").Replace("=", ":"),
-        //                        headers = new { }
-        //                    }
-        //                }
-        //            };
-
-        //            Dispatcher.Invoke(() =>
-        //            {
-        //                OutputBox.Text = JsonSerializer.Serialize(_capturedMetadata, new JsonSerializerOptions { WriteIndented = true });
-        //            });
-        //        }
-        //    };
-        //    //await page.GoToAsync("https://careers.google.com/jobs/search");
-
-        //}
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {

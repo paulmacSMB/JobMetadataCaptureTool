@@ -1,5 +1,5 @@
 ﻿using PuppeteerSharp;
-using System.Globalization;
+using System.Windows.Interop;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -28,13 +28,29 @@ namespace JobMetadataCaptureTool
                 return;
             }
 
+            var screenWidth = (int)SystemParameters.PrimaryScreenWidth;
+            var screenHeight = (int)SystemParameters.PrimaryScreenHeight;
+
+            var wpfWindow = Window.GetWindow(this);
+            wpfWindow.Left = 0;
+            wpfWindow.Top = 0;
+            wpfWindow.Width = screenWidth / 2;
+            wpfWindow.Height = screenHeight;
+
             var browserFetcher = new BrowserFetcher();
             await browserFetcher.DownloadAsync();
+
+            // Position the browser to the right of the WPF UI 
 
             _browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
                 Headless = false,
-                DefaultViewport = null
+                DefaultViewport = null,
+                Args = new[]
+                    {
+                        $"--window-position={screenWidth / 2},0",
+                        $"--window-size={screenWidth / 2},{screenHeight}"
+                    }
             });
 
             var pages = await _browser.PagesAsync();
@@ -44,7 +60,7 @@ namespace JobMetadataCaptureTool
             MessageBox.Show("Browser launched. Navigate to a job search page, then click 'Capture Metadata'.");
         }
 
-        private async void CaptureButton_Click(object sender, RoutedEventArgs e)
+        private void CaptureButton_Click(object sender, RoutedEventArgs e)
         {
             if (_page == null || _page.IsClosed)
             {
@@ -70,7 +86,7 @@ namespace JobMetadataCaptureTool
                 searchStrategies = new[]
                 {
             new
-            {   
+            {
                 companyName,
                 searchType = "queryParam",
                 exampleQuery = uri.Query,

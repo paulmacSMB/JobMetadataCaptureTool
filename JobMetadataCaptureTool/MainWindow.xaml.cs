@@ -20,6 +20,34 @@ namespace JobMetadataCaptureTool
             InitializeComponent();
         }
 
+        private void AttachBrowserEventHandlers()
+        {
+            _browser.TargetCreated += async (s, eArgs) =>
+            {
+                var newPage = await eArgs.Target.PageAsync();
+                if (newPage != null)
+                {
+                    try
+                    {
+                        await newPage.BringToFrontAsync();
+
+                        await newPage.WaitForNavigationAsync(new NavigationOptions
+                        {
+                            WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
+                        });
+
+                        _page = newPage; // Set this as the new active page
+                        Console.WriteLine("New tab detected and assigned as active: " + _page.Url);
+                    }
+                    catch
+                    {
+                        await newPage.WaitForTimeoutAsync(1000);
+                        _page = newPage;
+                    }
+                }
+            };
+        }
+
         private async void LaunchButton_Click(object sender, RoutedEventArgs e)
         {
             if (_browser != null && !_browser.IsClosed)
@@ -49,9 +77,12 @@ namespace JobMetadataCaptureTool
                 Args = new[]
                     {
                         $"--window-position={screenWidth / 2},0",
-                        $"--window-size={screenWidth / 2},{screenHeight}"
+                        $"--window-size={screenWidth / 2},{screenHeight}",
+                        $"--disable-popup-blocking"
                     }
             });
+
+            AttachBrowserEventHandlers();
 
             var pages = await _browser.PagesAsync();
             _page = pages.First();
@@ -70,9 +101,8 @@ namespace JobMetadataCaptureTool
 
             var url = _page.Url;
             var uri = new Uri(url);
-
+            Console.WriteLine("Capturing from: " + url);
             string companyName = GetCompanyNameFromUri.ExtractNameFromTitle(uri);
-
 
             _capturedMetadata = new
             {

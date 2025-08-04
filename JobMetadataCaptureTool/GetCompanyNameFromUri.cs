@@ -13,7 +13,7 @@ namespace JobMetadataCaptureTool
 
         public static string ExtractNameFromTitle(Uri uri)
         {
-            var ignoredSubdomains = new[] { "www", "jobs", "careers", "workday", "boards", "apply", "employment" };
+            var ignoredSubdomains = new[] { "www", "jobs", "careers", "workday", "boards", "apply", "employment" , "com" };
 
             var hostParts = uri.Host.Split('.');
             var filteredParts = hostParts
@@ -23,6 +23,7 @@ namespace JobMetadataCaptureTool
             string companyCandidate = (filteredParts.Length >= 2)
                 ? filteredParts[filteredParts.Length - 2]
                 : filteredParts.FirstOrDefault() ?? "Unknown";
+
 
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(companyCandidate);
         }

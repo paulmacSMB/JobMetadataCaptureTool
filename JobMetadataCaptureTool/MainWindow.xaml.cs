@@ -20,34 +20,6 @@ namespace JobMetadataCaptureTool
             InitializeComponent();
         }
 
-        private void AttachBrowserEventHandlers()
-        {
-            _browser.TargetCreated += async (s, eArgs) =>
-            {
-                var newPage = await eArgs.Target.PageAsync();
-                if (newPage != null)
-                {
-                    try
-                    {
-                        await newPage.BringToFrontAsync();
-
-                        await newPage.WaitForNavigationAsync(new NavigationOptions
-                        {
-                            WaitUntil = new[] { WaitUntilNavigation.Networkidle0 }
-                        });
-
-                        _page = newPage; // Set this as the new active page
-                        Console.WriteLine("New tab detected and assigned as active: " + _page.Url);
-                    }
-                    catch
-                    {
-                        await newPage.WaitForTimeoutAsync(1000);
-                        _page = newPage;
-                    }
-                }
-            };
-        }
-
         private async void LaunchButton_Click(object sender, RoutedEventArgs e)
         {
             if (_browser != null && !_browser.IsClosed)
@@ -65,9 +37,6 @@ namespace JobMetadataCaptureTool
             wpfWindow.Width = screenWidth / 2;
             wpfWindow.Height = screenHeight;
 
-            var browserFetcher = new BrowserFetcher();
-            await browserFetcher.DownloadAsync();
-
             // Position the browser to the right of the WPF UI 
 
             _browser = await Puppeteer.LaunchAsync(new LaunchOptions
@@ -82,26 +51,93 @@ namespace JobMetadataCaptureTool
                     }
             });
 
-            AttachBrowserEventHandlers();
-
-            var pages = await _browser.PagesAsync();
+            // grab the default first page too
+           var pages = await _browser.PagesAsync();
             _page = pages.First();
 
             LaunchButton.IsEnabled = false;
             MessageBox.Show("Browser launched. Navigate to a job search page, then click 'Capture Metadata'.");
         }
 
-        private void CaptureButton_Click(object sender, RoutedEventArgs e)
+        private async void CaptureButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_page == null || _page.IsClosed)
+           
+            if (_browser == null)
             {
-                MessageBox.Show("Browser is not open or tab is closed.", "Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show("Browser not launched.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
+            }
+
+            var pages = await _browser.PagesAsync();
+
+            foreach (var page in pages)
+            {
+                try
+                {
+                    var isVisible = await page.EvaluateExpressionAsync<string>("document.visibilityState") == "visible";
+                    if (isVisible)
+                    {
+                        _page = page;
+                        break;
+                    }
+                }
+                catch
+                {
+                    // In case page is in a weird state
+                    continue;
+                }
+            }
+
+            if (_page == null)
+            {
+                MessageBox.Show("No visible tab found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
+
+            await _page.BringToFrontAsync();
+
+            var html = await _page.GetContentAsync();
+            Console.WriteLine("Capturing HTML content...", html.ToString());
+
+            if (string.IsNullOrEmpty(html))
+            {
+                MessageBox.Show("No HTML content found on the page.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                 return;
+            }
+
+            var anchorHandle = await _page.QuerySelectorAsync("a.navbar-brand");
+
+            if (anchorHandle != null)
+            {
+                var href = await anchorHandle.EvaluateFunctionAsync<string>("a => a.href");
+                if (!string.IsNullOrEmpty(href))
+                {
+                    var uti = new Uri(href);
+                    var host = uti.Host;
+
+                    var parts = host.Split('.');
+                    string compName = (parts.Length >= 2 && parts[0] == "www")
+                        ? parts[1]
+                        : parts[0];
+
+                    Console.WriteLine("Company name extracted from anchor: " + compName);
+
+                }
+                else
+                {
+                    MessageBox.Show("Anchor found but no href attribute.", "Warning", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            }
+            else
+            {
+                Console.WriteLine("No anchor with class 'navbar-brand' found on the page.");
             }
 
             var url = _page.Url;
             var uri = new Uri(url);
             Console.WriteLine("Capturing from: " + url);
+
+            // getting the company name from the url might now work, maybe get it from the page data
             string companyName = GetCompanyNameFromUri.ExtractNameFromTitle(uri);
 
             _capturedMetadata = new
